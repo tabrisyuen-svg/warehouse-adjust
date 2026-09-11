@@ -347,9 +347,9 @@ if(type==='sub'||type==='add'){
       <div id="aPerPackField" style="display:none" class="field"><label>一盒總件數</label><input id="aPerPack" type="number" min="1" value="${pp||''}"></div>`:'';
     body=`
       ${unitPart}
-      <div class="field"><label>${t==='sub'?'扣除':'加入'}數量</label>
+      <div class="field"><label>${type==='sub'?'扣除':'加入'}數量</label>
         <div style="display:flex;align-items:center;gap:10px">
-          ${stepperHtml('aQty',1,t==='sub'?iq:null)}
+          ${stepperHtml('aQty',1,type==='sub'?iq:null)}
           <span class="dim">現有 <b>${iq}</b> 件</span>
         </div>
       </div>`;
