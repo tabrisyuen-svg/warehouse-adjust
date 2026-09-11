@@ -468,7 +468,6 @@ function collect(){
         addQty=q*perPack;
       }
     }
-    }
     const delta=t==='sub'?q:addQty;
     const after=t==='sub'?iq-delta:iq+delta;
     const unitLabel=unit==='box'?` (${q}箱×${perBox})`:unit==='pkt'?` (${q}盒×${perPack})`:'';
