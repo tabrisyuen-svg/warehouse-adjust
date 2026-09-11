@@ -184,7 +184,7 @@ function normalize(rows){
 async function load(){
   $('#updated').textContent='載入中…';
   try{
-    const url=`${WEB_APP_URL}?sheet=${ADJ_SHEET}&cachebust=${Date.now()}`;
+    const url=`${WEB_APP_URL}?sheet=${encodeURIComponent(ADJ_SHEET)}&cachebust=${Date.now()}`;
     const r=await fetch(url);
     if(!r.ok) throw new Error('讀取失敗 '+r.status);
     const d=await r.json();
