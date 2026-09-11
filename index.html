@@ -334,8 +334,8 @@ function openForm(type,item){
   const others=item?same.filter(d=>d!==item):[];
 
   let body='';
-if(t==='sub'||t==='add'){
-    const unitPart=t==='add'?`
+if(type==='sub'||type==='add'){
+    const unitPart=type==='add'?`
       <div class="field"><label>入庫單位</label>
         <div class="reasons" id="aUnitSel">
           <button type="button" class="on" data-unit="loose">散件</button>
@@ -544,6 +544,7 @@ async function doCommit(){
       payload.unit=v.unit;
       if(v.unit==='box')payload.perBox=v.perBox;
       if(v.unit==='pkt')payload.perPack=v.perPack;
+    }
   }else if(t==='move'){
     payload.rowNo=item.rowNo;payload.q=v.q;
     if(v.tgt)payload.toRowNo=v.tgt.rowNo;
