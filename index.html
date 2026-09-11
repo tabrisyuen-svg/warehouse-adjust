@@ -334,11 +334,22 @@ function openForm(type,item){
   const others=item?same.filter(d=>d!==item):[];
 
   let body='';
-  if(type==='sub'||type==='add'){
+if(t==='sub'||t==='add'){
+    const unitPart=t==='add'?`
+      <div class="field"><label>入庫單位</label>
+        <div class="reasons" id="aUnitSel">
+          <button type="button" class="on" data-unit="loose">散件</button>
+          <button type="button" data-unit="pkt">盒</button>
+          <button type="button" data-unit="box">箱</button>
+        </div>
+      </div>
+      <div id="aPerBoxField" style="display:none" class="field"><label>一箱總件數</label><input id="aPerBox" type="number" min="1" value="${pb||''}"></div>
+      <div id="aPerPackField" style="display:none" class="field"><label>一盒總件數</label><input id="aPerPack" type="number" min="1" value="${pp||''}"></div>`:'';
     body=`
-      <div class="field"><label>${type==='sub'?'扣除':'加入'}數量</label>
+      ${unitPart}
+      <div class="field"><label>${t==='sub'?'扣除':'加入'}數量</label>
         <div style="display:flex;align-items:center;gap:10px">
-          ${stepperHtml('aQty',1,type==='sub'?iq:null)}
+          ${stepperHtml('aQty',1,t==='sub'?iq:null)}
           <span class="dim">現有 <b>${iq}</b> 件</span>
         </div>
       </div>`;
@@ -404,9 +415,14 @@ function openForm(type,item){
     if(inp.max!=='')v=Math.min(+inp.max,v);
     inp.value=v;updatePreview();
   });
-  F.querySelectorAll('#aReasons button').forEach(b=>b.onclick=()=>{
-    F.querySelectorAll('#aReasons button').forEach(x=>x.classList.remove('on'));
+  F.querySelectorAll('#aUnitSel button').forEach(b=>b.onclick=()=>{
+    F.querySelectorAll('#aUnitSel button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
+    const u=b.dataset.unit;
+    const pbf=$('#aPerBoxField'),ppf=$('#aPerPackField');
+    if(pbf)pbf.style.display=u==='box'?'':'none';
+    if(ppf)ppf.style.display=u==='pkt'?'':'none';
+    updatePreview();
   });
   const toSel=$('#aToSel');
   if(toSel)toSel.onchange=()=>{
@@ -440,9 +456,25 @@ function collect(){
     const q=getNum('#aQty');
     if(q<=0)return{err:'數量要大於 0'};
     if(t==='sub'&&q>iq)return{err:`庫存不足，現有 ${iq}`};
-    const after=t==='sub'?iq-q:iq+q;
-    return{ok:true,sku,q,
-      preview:`${fmtLoc(item)} ${iq} → <b>${after}</b> <span class="${t==='sub'?'mn':'pl'}">${t==='sub'?'−':'+'}${q}</span><br>SKU 合計 ${tot} → <b>${t==='sub'?tot-q:tot+q}</b>`};
+
+    let unit='loose',perBox=0,perPack=0,addQty=q;
+    if(t==='add'){
+      unit=$('#aUnitSel .on')?.dataset.unit||'loose';
+      if(unit==='box'){
+        perBox=getNum('#aPerBox');
+        if(!perBox)return{err:'請填一箱總件數'};
+        addQty=q*perBox;
+      }else if(unit==='pkt'){
+        perPack=getNum('#aPerPack');
+        if(!perPack)return{err:'請填一盒總件數'};
+        addQty=q*perPack;
+      }
+    }
+    const delta=t==='sub'?q:addQty;
+    const after=t==='sub'?iq-delta:iq+delta;
+    const unitLabel=unit==='box'?` (${q}箱×${perBox})`:unit==='pkt'?` (${q}盒×${perPack})`:'';
+    return{ok:true,sku,q,unit,perBox,perPack,addQty,
+      preview:`${fmtLoc(item)} ${iq} → <b>${after}</b> <span class="${t==='sub'?'mn':'pl'}">${t==='sub'?'−'+q:'+'+delta+unitLabel}</span><br>SKU 合計 ${tot} → <b>${t==='sub'?tot-delta:tot+delta}</b>`};
   }
   if(t==='move'){
     const q=getNum('#aQty');
@@ -508,6 +540,10 @@ async function doCommit(){
   let payload={type:t,sheet:ADJ_SHEET,note,op,reason};
   if(t==='sub'||t==='add'){
     payload.rowNo=item.rowNo;payload.q=v.q;
+    if(t==='add'){
+      payload.unit=v.unit;
+      if(v.unit==='box')payload.perBox=v.perBox;
+      if(v.unit==='pkt')payload.perPack=v.perPack;
   }else if(t==='move'){
     payload.rowNo=item.rowNo;payload.q=v.q;
     if(v.tgt)payload.toRowNo=v.tgt.rowNo;
@@ -548,8 +584,11 @@ function applyLocal(v){
     item.total-=v.q;item.loose=Math.max(0,item.loose-v.q);
     log({type:'扣庫',sku:item.sku,loc:fmtLoc(item),delta:'−'+v.q});
   }else if(t==='add'){
-    item.total+=v.q;item.loose+=v.q;
-    log({type:'加庫',sku:item.sku,loc:fmtLoc(item),delta:'+'+v.q});
+    if(v.unit==='box'){item.box+=v.q;item.perBox=v.perBox;}
+    else if(v.unit==='pkt'){item.pack+=v.q;item.perPack=v.perPack;}
+    else{item.loose+=v.addQty;}
+    item.total+=v.addQty;
+    log({type:'加庫',sku:item.sku,loc:fmtLoc(item),delta:'+'+v.addQty});
   }else if(t==='move'){
     const fromLoc=fmtLoc(item);
     item.total-=v.q;item.loose=Math.max(0,item.loose-v.q);
