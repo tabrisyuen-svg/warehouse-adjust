@@ -461,14 +461,13 @@ function collect(){
     if(t==='add'){
       unit=$('#aUnitSel .on')?.dataset.unit||'loose';
       if(unit==='box'){
-        perBox=getNum('#aPerBox');
-if(unit==='box'){
-  perBox=getNum('#aPerBox')||1; // 唔填預設 1
-  addQty=q*perBox;
-}else if(unit==='pkt'){
-  perPack=getNum('#aPerPack')||1; // 唔填預設 1
-  addQty=q*perPack;
-}
+        perBox=getNum('#aPerBox')||1;
+        addQty=q*perBox;
+      }else if(unit==='pkt'){
+        perPack=getNum('#aPerPack')||1;
+        addQty=q*perPack;
+      }
+    }
     }
     const delta=t==='sub'?q:addQty;
     const after=t==='sub'?iq-delta:iq+delta;
