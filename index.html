@@ -495,8 +495,6 @@ function collect(){
   const loc=getLoc('aTgt');if(!loc)return{err:'請填格位（行/架/層）'};
   const box=getNum('#aBox'),perBox=getNum('#aPerBox');
   const pack=getNum('#aPack'),perPack=getNum('#aPerPack'),loose=getNum('#aLoose');
-  if(box&&!perBox)return{err:'有箱數請填一箱件數'};
-  if(pack&&!perPack)return{err:'有盒數請填一盒件數'};
   const total=box*perBox+pack*perPack+loose;
   if(t==='new'&&!sku)return{err:'SKU 必填'};
   return{ok:true,sku,loc,box,perBox,pack,perPack,loose,total,
